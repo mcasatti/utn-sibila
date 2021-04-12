@@ -17,7 +17,7 @@ class KnowledgeManager:
         if database2:
             self.db2 = DBManager(host=host,port=port,database=database2,user=user2,password=password2)
     '''
-    Los VERBOS de la gestión de la base de datos van a ser:
+    Los VERBOS de la gestión de la base de conocimiento van a ser:
     INS: Insertar un nuevo registro
     DEL: Eliminar un registro existente
     UPD: Modificar un registro existente

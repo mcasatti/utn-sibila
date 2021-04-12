@@ -1,14 +1,75 @@
 GET http://localhost:8000/conceptos
 
 {
-    "filter" : [
-        "Nombre" : "POO",
-        "Prueba" : "Otro campo"
-    ],
-    "limit" : 5
+    "filter" : {
+        "Nombre" : "RELACIONAL"
+    },
+    "limit" : 2
 }
 ###
+GET http://localhost:8000/conceptos/complejos
+###
+POST http://localhost:8000/concepto
 
+{
+    "Nombre" : "TEST 122"
+}
+###
+PUT http://localhost:8000/concepto
+
+{
+    "oldConcepto" : {
+        "Nombre" : "TEST122"
+    },
+    "newConcepto" : {
+        "Nombre" : "TEST1222"
+    }
+}
+###
+DELETE http://localhost:8000/concepto
+
+{
+    "Nombre" : "TEST1222"
+}
+###
+GET http://localhost:8000/concepto/refs
+
+{
+    "Nombre" : "POO"
+}
+###
+GET http://localhost:8000/concepto/equivalencias
+
+{
+    "Nombre" : "TESTCUATRO"
+}
+###
+POST http://localhost:8000/concepto/equivalencias
+
+{
+    "concepto" : {
+        "Nombre" : "TESTCUATRO"
+    },
+    "equivalencia" : {
+        "Nombre" : "OTRAEQUIVALENCIAPORAPI",
+        "Peso" : 0.5
+    }
+}
+###
+DELETE http://localhost:8000/concepto/equivalencias
+
+{
+    "concepto" : {
+        "Nombre" : "TESTCUATRO"
+    },
+    "equivalencia" : {
+        "Nombre" : "PRUEBA EQUIV",
+        "Peso" : 0
+    }
+}
+###
+GET http://localhost:8000/relaciones
+###
 GET http://localhost:8000/docs
 ###
 

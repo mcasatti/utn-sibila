@@ -3,12 +3,17 @@ Server Web que implementará la API de Sibila.
 Por el momento es simplemente un sandbox para hacer algunas
 pruebas de las librerías de Python y otros conceptos.
 '''
-from entities.graphclasses import Concepto
+from starlette.responses import Response
+from entities.graphclasses import Concepto,Relacion,Equivalencia
 import logging
 from rich import print,inspect
 from rich.logging import RichHandler
 from managers.knowledgemanager import KnowledgeManager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Body
+from http import HTTPStatus
+from json.decoder import JSONDecodeError
+from managers.dbmanager import DBException
+import os
 
 FORMAT = "%(message)s"
 #logging.basicConfig(level=logging.INFO,handlers=[RichHandler()])
@@ -16,7 +21,13 @@ logging.basicConfig(
     level="NOTSET", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
 )
 
-km = KnowledgeManager()
+km = KnowledgeManager(
+    host=os.getenv('PB_DB_HOST','http://localhost'),       # HOST
+    port=os.getenv('PB_DB_PORT',2480),              # PORT
+    user=os.getenv('PB_DB_USER','admin'),           # USER
+    password=os.getenv('PB_DB_PASS','admin')        # PASSWORD
+)
+
 app = FastAPI()
 
 '''
@@ -32,30 +43,115 @@ async def read_root():
     return {"Sibila Server": "Servidor Web Sibila (FastAPI/Python)"}
 
 
+'''
+METODOS para gestionar CONCEPTOS
+'''
 @app.get("/conceptos/")
-async def getConceptos():
-    return km.getConceptos()
+async def getConceptos(request : Request):
+    try:
+        body = await request.json();
+        return km.getConceptos(
+            keys=body.get('filter',None),
+            limit=body.get('limit',None)
+        )
+    except JSONDecodeError as e:
+        return Response(content=e.msg,status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+@app.get("/conceptos/complejos")
+async def getConceptosComplejos(request : Request):
+    return km.getConceptosComplejos()
 
 @app.post("/concepto/")
 async def insConcepto(concepto : Concepto):
-    result,id = km.insConcepto(concepto)
-    print (result)
-    return result
+    try:
+        result,id = km.insConcepto(concepto)
+        return result
+    except DBException as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 @app.put("/concepto/")
-async def updConcepto(concepto : Concepto):
-    oldConcepto = Concepto(Nombre=concepto.Nombre)
-    result = km.updConcepto(oldConcepto,concepto)
-    print (result)
+async def updConcepto(oldConcepto : Concepto, newConcepto : Concepto):
+    try:
+        result = km.updConcepto(oldConcepto,newConcepto)
+        return result
+    except DBException as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 @app.delete("/concepto/")
 async def delConcepto(concepto : Concepto):
-    result = km.delConcepto(concepto)
-    print (result)
+    try:
+        result = km.delConcepto(concepto)
+        return result
+    except DBException as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+@app.get("/concepto/refs")
+async def getRefsConcepto (concepto : Concepto):
+    refs = km.getRefsConcepto(concepto)
+    return {"references":refs}
+
+@app.get("/concepto/equivalencias")
+async def getEquivalencias (concepto : Concepto):
+    equivalencias = km.getEquivalencias(concepto = concepto)
+    return {"equivalencias":equivalencias}
+
+@app.post("/concepto/equivalencias")
+async def insEquivalencia (concepto : Concepto, equivalencia : Equivalencia):
+    return km.insEquivalencia(
+        concepto = concepto,
+        equivalencia=equivalencia.Nombre,
+        peso=equivalencia.Peso
+        )
+
+@app.delete("/concepto/equivalencias")
+async def insEquivalencia (concepto : Concepto, equivalencia : Equivalencia):
+    return km.delEquivalencia(
+        concepto = concepto,equivalencia=equivalencia.Nombre
+        )
 
 
-@app.get("/relaciones/")
-async def get_relaciones(request : Request):
-    return km.getRelaciones()
-
+'''
+METODOS para gestionar RELACIONES
+'''
+@app.get("/relaciones")
+async def getRelaciones(request : Request):
+    try:
+        body = await request.json();
+        return km.getRelaciones(
+            keys=body.get('filter',None),
+            limit=body.get('limit',None)
+        )
+    except JSONDecodeError as e:
+        return Response(content=e.msg,status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
     
+@app.get("/relaciones/complejas")
+async def getRelacionesComplejas():
+    return km.getRelacionesComplejas()
+
+@app.post("/relacion")
+async def insRelacion(origen: Concepto, relacion: Relacion, destino: Concepto):
+    try:
+        result = km.insRelacion(conceptoOrigen=origen, relacion=relacion, conceptoDestino=destino)
+        return result
+    except DBException as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+@app.post("/tiporelacion")
+async def insRelacion(tiporelacion : str = Body(..., embed=True)):
+    # Body(...,embed=True) sirve para aceptar un tipo de datos básico como json en lugar de un objeto
+    try:
+        result = km.addTipoRelacion(nombreTipo=tiporelacion)
+        return result
+    except DBException as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+'''
+METODOS para gestionar ESTRUCTURAS
+'''
+@app.post("/estructura")
+async def insEstructura (origen : Concepto, relacion : Relacion, destino : Concepto):
+    try:
+        result = km.insStruct(conceptoOrigen=origen, relacion=relacion, conceptoDestino=destino)
+        return result
+    except DBException as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)

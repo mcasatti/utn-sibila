@@ -15,11 +15,12 @@ def main():
     km = KnowledgeManager()
     
     try:
-        
+        inspect (km.getConceptosComplejos())
+
+        '''
         c1 = Concepto(Nombre="ConceptoExtraño")
         result, id = km.insConcepto(c1)
         print (result,id)
-        '''
         conceptos = ['MODELO','DISEÑO','PROGRAMA','OBJETO']
 
         result = km.getPath(conceptoInicial=c1,conceptosIncluidos=conceptos)

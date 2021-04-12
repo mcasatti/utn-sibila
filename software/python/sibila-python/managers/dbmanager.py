@@ -96,8 +96,8 @@ class DBManager:
 
     def extractCount (self, result: str) -> str:
         json_res = result #json.loads(result)
-        id = json_res[0]["count"]
-        return id
+        count = json_res[0]["count"]
+        return count
 
     def execQuery (self,query : str) -> str:
         '''
@@ -135,7 +135,7 @@ class DBManager:
         command = "CREATE VERTEX {classname} SET {fields}".format(classname=classname,fields=flds)
         result = self.execCommand(command)
         if result:
-            id = self.db.extractId(result)
+            id = self.extractId(result)
         else:
             id = None
         return result,id
