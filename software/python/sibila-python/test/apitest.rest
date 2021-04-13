@@ -1,10 +1,10 @@
 GET http://localhost:8000/conceptos
 
 {
-    "filter" : {
+  "filter" : {
         "Nombre" : "RELACIONAL"
     },
-    "limit" : 2
+    "limit" : 2  
 }
 ###
 GET http://localhost:8000/conceptos/complejos
@@ -76,3 +76,25 @@ GET http://localhost:8000/docs
 GET http://localhost:8000/openapi.json
 ###
 
+GET http://localhost:8000/path
+
+{
+    "conceptoInicial" : {
+        "Nombre" : "POO"
+    },
+    "conceptosIncluidos" : [
+        "OBJETO",
+        "ATRIBUTO",
+        "METODO"
+    ]
+}
+###
+
+GET http://localhost:8000/path/depth
+
+{
+    "conceptoInicial" : {
+        "Nombre" : "POO"
+    },
+    "depth" : 1
+}

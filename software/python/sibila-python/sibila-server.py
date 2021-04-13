@@ -4,11 +4,13 @@ Por el momento es simplemente un sandbox para hacer algunas
 pruebas de las librerías de Python y otros conceptos.
 '''
 from starlette.responses import Response
+from typing import Dict, List,Tuple
 from entities.graphclasses import Concepto,Relacion,Equivalencia
 import logging
 from rich import print,inspect
 from rich.logging import RichHandler
 from managers.knowledgemanager import KnowledgeManager
+from managers.textmanager import TextManager
 from fastapi import FastAPI, Request, Body
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
@@ -27,6 +29,8 @@ km = KnowledgeManager(
     user=os.getenv('PB_DB_USER','admin'),           # USER
     password=os.getenv('PB_DB_PASS','admin')        # PASSWORD
 )
+
+tm = TextManager()
 
 app = FastAPI()
 
@@ -154,4 +158,49 @@ async def insEstructura (origen : Concepto, relacion : Relacion, destino : Conce
         result = km.insStruct(conceptoOrigen=origen, relacion=relacion, conceptoDestino=destino)
         return result
     except DBException as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+'''
+METODOS para gestionar RUTAS
+'''
+@app.get("/path")
+async def getPath (conceptoInicial : Concepto, conceptosIncluidos : List[str]):
+    try:
+        result = km.getPath(
+            conceptoInicial=conceptoInicial,
+            conceptosIncluidos=conceptosIncluidos
+        )
+        return result
+    except DBException as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+@app.get("/path/depth")
+async def getPathDepth (conceptoInicial : Concepto, depth : int = Body(..., embed=True)):
+    try:
+        result = km.getPathsFrom(
+            conceptoInicial=conceptoInicial,
+            profundidad=depth
+        )
+        return result
+    except DBException as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+@app.get("/path/type")
+async def getPathByType (relacion : Relacion):
+    try:
+        result = km.getPathsByType(relacion=relacion)
+        return result
+    except DBException as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+'''
+METODOS para gestionar la ortografía y procesamiento de texto
+'''
+@app.get("/checkortografia")
+async def getCorregirOrtografia (texto : str = Body(...,embed=True), full : bool = Body(default=False,embed=True)):
+    try:
+        result = tm.checkOrtografia(texto=texto,full=full)
+        return result
+    except Exception as e:
         return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)

@@ -2,4 +2,5 @@ fastapi
 uvicorn[standard]
 fastapi-utils
 ftfy
-
+cyhunspell
+spacy

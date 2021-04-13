@@ -173,6 +173,10 @@ class KnowledgeManager:
             )
         return result
 
+    #TODO: Falta el método para eliminar una relación
+    def delRelacion (self,conceptoOrigen : Concepto, relacion : Relacion, conceptoDestino : Concepto):
+        raise NotImplementedError
+    
     def isValidRelacionName (self,relacionName : str) -> bool:
         # El nombre de una relacion es valido si es una palabra, sino hay que adecuarlo
         return (len(relacionName.split()) == 1)
@@ -218,10 +222,10 @@ class KnowledgeManager:
     # OTRAS OPERACIONES
     # --------------------------------------------------------------------------------------------
     def getTipoTermino (self,termino : Termino):
-        pass
+        raise NotImplementedError
     
     def cleanTerminos (self,terminos : List) -> List:
-        pass
+        raise NotImplementedError
 
     def insStruct (self,conceptoOrigen : Concepto, relacion : Relacion, conceptoDestino : Concepto):
         '''Inserta una estructura completa C -> R -> C, creando las entidades que no existan
