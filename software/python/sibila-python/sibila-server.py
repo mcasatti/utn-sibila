@@ -3,6 +3,7 @@ Server Web que implementará la API de Sibila.
 Por el momento es simplemente un sandbox para hacer algunas
 pruebas de las librerías de Python y otros conceptos.
 '''
+
 from starlette.responses import Response
 from typing import Dict, List,Tuple
 from entities.graphclasses import Concepto,Relacion,Equivalencia
@@ -15,7 +16,11 @@ from fastapi import FastAPI, Request, Body
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 from managers.dbmanager import DBException
+from multiprocessing import Process
 import os
+import asyncio
+import signal
+import uvicorn
 
 FORMAT = "%(message)s"
 #logging.basicConfig(level=logging.INFO,handlers=[RichHandler()])
@@ -204,3 +209,58 @@ async def getCorregirOrtografia (texto : str = Body(...,embed=True), full : bool
         return result
     except Exception as e:
         return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+
+
+
+
+
+def run(): 
+    """
+    This function to run configured uvicorn server.
+    """
+    uvicorn.run("sibila-server:app", 
+        host=os.getenv('PB_LISTENING_IP',"0.0.0.0"), 
+        port=int(os.getenv('PB_LISTENING_PORT',8000)), 
+        #reload=True,
+        log_config = None
+        )
+
+def start():
+    """
+    This function to start a new process (start the server).
+    """
+    global proc
+    # create process instance and set the target to run function.
+    # use daemon mode to stop the process whenever the program stopped.
+    proc = Process(target=run, args=(), daemon=True)
+    proc.start()
+
+
+def stop(): 
+    """
+    This function to join (stop) the process (stop the server).
+    """
+    global proc
+    # check if the process is not None
+    if proc: 
+        # join (stop) the process with a timeout setten to 0.25 seconds.
+        # using timeout (the optional arg) is too important in order to
+        # enforce the server to stop.
+        proc.join(0.25)
+
+if __name__ == "__main__":
+    # La siguiente linea la sugieren para poder depurar interactivamente desde vscode
+    # multiprocessing.set_start_method('spawn', True)
+    
+    # to start the server call start function.
+    start()
+    
+    # to stop the server call stop function.
+    loop = asyncio.get_event_loop()
+    signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
+    for s in signals:
+        loop.add_signal_handler(
+            s, lambda s=s: asyncio.create_task(stop())
+        )
