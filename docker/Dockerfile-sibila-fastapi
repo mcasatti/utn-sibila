@@ -1,0 +1,39 @@
+###################
+### Python Base ###
+###################
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8-slim as builder
+LABEL maintainer="Martin Casatti"
+
+ENV SPACY_VERSION    3.0
+
+# INSTALL REQUIREMENTS (son pocos asi que no se usa 'requirements.txt')
+
+RUN \
+	python -m pip install --no-cache-dir --upgrade pip 
+
+RUN \
+	pip install --no-cache-dir fastapi uvicorn pydantic cyhunspell rich spacy 
+
+RUN \
+	# Si esto se hace en el RUN anterior, no encuentra spacy instalado. Acá si.
+	python -m spacy download es_core_news_sm
+
+#####################
+### SIBILA PYTHON ###
+#####################
+COPY ./software/python/sibila-python ./
+
+ENV PB_DB_HOST=http://localhost \
+    PB_DB_PORT=2480 \
+    PB_DB_USER=admin \
+    PB_DB_PASS=admin \
+    PB_LISTENING_PORT=8000
+
+# Define working directory.
+WORKDIR /
+RUN cd ./
+
+EXPOSE 8000
+
+CMD uvicorn sibila-server:app --host 0.0.0.0 --port ${PB_LISTENING_PORT}
+

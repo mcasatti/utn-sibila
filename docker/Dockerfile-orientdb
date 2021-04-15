@@ -40,9 +40,10 @@ WORKDIR /orientdb
 #COPIAR LA BASE DE DATOS PPR A LA CARPETA databases
 COPY ./orientdb/databases/PPR ./databases/PPR
 #COPIAR ALGUNAS BASES DE DATOS DE EJEMPLO A databases
-COPY ./orientdb/databases/GOT ./databases/GOT
-COPY ./orientdb/databases/vehiclehistory ./databases/vehiclehistory
+#COPY ./orientdb/databases/GOT ./databases/GOT
+#COPY ./orientdb/databases/vehiclehistory ./databases/vehiclehistory
 #COPY ./orientdb/databases/movieratings ./databases/movieratings
+COPY ./orientdb/databases/portico ./databases/portico
 
 VOLUME ["/orientdb/backup", "/orientdb/databases", "/orientdb/config"]
 

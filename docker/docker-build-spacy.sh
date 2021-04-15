@@ -1,1 +1,0 @@
-docker build --tag mcasatti/sibila-spacy:latest --tag 305402192421.dkr.ecr.sa-east-1.amazonaws.com/sibila-spacy:latest --file Dockerfile-spacy ../.

@@ -15,23 +15,30 @@ services:
     networks:
       sibila_net:
         ipv4_address: 172.28.1.1
-  sibila:
-    image: 'mcasatti/sibila-fastapi:latest'
-    container_name: sibila-fastapi
+  spacy:
+    image: 'mcasatti/sibila-spacy:latest'
+    container_name: sibila-spacy
     restart: always
     ports:
-      - '8000:8000'
-    environment:
-      - PB_DB_HOST=http://172.28.1.1 
-      - PB_DB_PORT=2480 
-      - PB_DB_USER=admin 
-      - PB_DB_PASS=admin 
-      - PB_LISTENING_PORT=8000
-    depends_on:
-      - orientdb
+      - '5000:5000'
     networks:
       sibila_net:
         ipv4_address: 172.28.1.2
+  sibila:
+    image: 'mcasatti/sibila-java:latest'
+    container_name: sibila-java
+    restart: always
+    ports:
+      - '8080:8080'
+    environment:
+      - SIBILA_ORIENT_HOST=172.28.1.1
+      - SIBILA_SPACY_HOST=http://172.28.1.2
+    depends_on:
+      - orientdb
+      - spacy
+    networks:
+      sibila_net:
+        ipv4_address: 172.28.1.3
 networks:
   sibila_net:
     ipam:
