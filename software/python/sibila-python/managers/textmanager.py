@@ -52,3 +52,13 @@ class TextManager:
             
         return correcciones, error
 
+    def saveToDict (self, word : str):
+        raise NotImplementedError
+
+    def delFromDict (self, word : str):
+        raise NotImplementedError
+
+    def getDictionary (self):
+        raise NotImplementedError
+
+        
