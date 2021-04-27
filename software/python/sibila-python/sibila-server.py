@@ -4,7 +4,7 @@ Por el momento es simplemente un sandbox para hacer algunas
 pruebas de las librerías de Python y otros conceptos.
 '''
 
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 from typing import Dict, List,Tuple
 from entities.graphclasses import Concepto,Relacion,Equivalencia
 import logging
@@ -13,6 +13,7 @@ from rich.logging import RichHandler
 from managers.knowledgemanager import KnowledgeManager
 from managers.textmanager import TextManager
 from fastapi import FastAPI, Request, Body
+from fastapi.encoders import jsonable_encoder
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 from managers.dbmanager import DBException
@@ -21,6 +22,7 @@ import os
 import asyncio
 import signal
 import uvicorn
+import random
 
 FORMAT = "%(message)s"
 #logging.basicConfig(level=logging.INFO,handlers=[RichHandler()])
@@ -202,13 +204,93 @@ async def getPathByType (relacion : Relacion):
 '''
 METODOS para gestionar la ortografía y procesamiento de texto
 '''
-@app.get("/checkortografia")
-async def getCorregirOrtografia (texto : str = Body(...,embed=True), full : bool = Body(default=False,embed=True)):
+@app.get("/text/check")
+async def getTextCheck (texto : str = Body(...,embed=True), full : bool = Body(default=False,embed=True)):
     try:
-        result = tm.checkOrtografia(texto=texto,full=full)
+        result = tm.check(texto=texto,full=full)
         return result
     except Exception as e:
         return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+@app.get("/text/tokenize")
+async def getTextTokens (texto : str = Body(...,embed=True)):
+    try:
+        correcciones,tokens = tm.tokenize(texto=texto)
+        res = {
+            "correcciones" : correcciones,
+            "terminos" : tokens
+        }
+        return res
+    except Exception as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+@app.post("/text/dictionary/word")
+async def insDictionaryWord (word : str = Body(...,embed=True)):
+    try:
+        result = tm.addWordToDict(word=word)
+        return result
+    except Exception as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+@app.post("/text/dictionary/words")
+async def insDictionaryWords (words : List[str] = Body(...,embed=True)):
+    try:
+        result = tm.addWordsToDict(words=words)
+        return result
+    except Exception as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+@app.get("/text/dictionary")
+async def getDictionary ():
+    try:
+        result = {"dictionary" : tm.getDictionary()}
+        return result
+    except Exception as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+@app.delete("/text/dictionary/word")
+async def delFromDictionary (word : str):
+    try:
+        result = tm.delWordFromDict(word=word)
+        return result
+    except Exception as e:
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+'''
+METODOS para gestionar las respuestas y la evaluación
+'''
+@app.post("/respuesta/evaluar")
+async def corregirRespuesta (respuestaBase : str= Body(...,embed=True), respuestaAlumno : str= Body(...,embed=True)):
+    try:
+        result = {"puntaje":round(random.uniform(0,1),2)}
+        return result
+    except Exception as e:
+        return Response(content=str(e), status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+@app.post("/respuesta/tokenize")
+async def tokenizeRespuesta (respuesta : str= Body(...,embed=True), includeStopWords : bool = Body(...,embed=True)):
+    try:
+        correcciones,tokens = km.tokenizeRespuesta(texto=respuesta,textManager=tm,includeStopWords=includeStopWords)
+        res = {
+            "correcciones" : correcciones,
+            "terminos" : tokens
+        }
+        return res
+    except Exception as e:
+        inspect(e)
+        return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
