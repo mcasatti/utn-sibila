@@ -37,6 +37,8 @@ km = KnowledgeManager(
     password=os.getenv('PB_DB_PASS','admin')        # PASSWORD
 )
 
+gm = GraphicManager()
+
 tm = TextManager()
 
 app = FastAPI()
@@ -346,3 +348,31 @@ if __name__ == "__main__":
         loop.add_signal_handler(
             s, lambda s=s: asyncio.create_task(stop())
         )
+
+'''
+METODOS PARA graficar los grafos.
+
+'''
+@app.get("/grafico/one")
+async def showOneResponse (conceptosRelaciones : List[str], relacionesSolo : List[str] = []):
+    try:
+        result = gm.showOneResponse(
+            conceptosRelaciones,
+            relacionesSolo
+        )
+        return result
+    except:
+        return Response(content='Error Graficando', status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+@app.get("/grafico/plenty")
+async def showMultipleResponse (conceptosRelaciones : List[str], relacionesSolo : List[str] = []):
+    try:
+        result = gm.showMultipleResponse(
+            conceptosRelaciones,
+            relacionesSolo
+        )
+        return result
+    except:
+        return Response(content='Error Graficando', status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
