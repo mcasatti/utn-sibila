@@ -1,13 +1,24 @@
 
 from typing import Dict, List,Tuple
 from .dbmanager import DBManager
+from .textmanager import TextManager
 from entities.graphclasses import *
 import re
 import json
+from rich import print,inspect
+
+class KmException (Exception):
+    message : str = None
+    def __init__(self,message : str):
+        self.message = message
+        super().__init__(self.message)
 
 class KnowledgeManager:
     db : DBManager = None
     db2: DBManager = None
+    mapTipoTermino : None
+        
+    
     """
     Concept Manager:
     Clase que engloba todas las operaciones de gestión de conceptos y relaciones en OrientDB
@@ -16,6 +27,33 @@ class KnowledgeManager:
         self.db = DBManager(host=host,port=port,database=database,user=user,password=password)
         if database2:
             self.db2 = DBManager(host=host,port=port,database=database2,user=user2,password=password2)
+        '''
+        Mapping de los tipos de termino.
+        Documentacion detallada: 
+        https://universaldependencies.org/es/index.html
+        https://universaldependencies.org/docs/u/pos/
+        '''
+        self.mapTipoTermino = {
+            "ADJETIVO":"CONCEPTO",
+            "ADPOSICION": "",
+            "ADVERBIO":"RELACION",
+            "AUXILIAR":"RELACION",
+            "CONJUNCION":"RELACION",
+            "DETERMINANTE":"",
+            "INTERJECCION":"",
+            "SUSTANTIVO":"CONCEPTO",
+            "NUMERAL":"CONCEPTO",
+            "PARTICULA":"",
+            "PRONOMBRE":"",
+            "PRONOMBRE PROPIO":"CONCEPTO",
+            "PUNTUACION":"",
+            "CONJUNCIÓN SUBORDINADA":"RELACION",
+            "SIMBOLO":"CONCEPTO",
+            "VERBO":"RELACION",
+            "CONJUNCION COORDINANTE":"RELACION",
+            "OTRO":""
+        }
+    
     '''
     Los VERBOS de la gestión de la base de conocimiento van a ser:
     INS: Insertar un nuevo registro
@@ -286,6 +324,45 @@ if ($relacion.size() = 0) {{
         normalized = re.sub(r'\s', '', pascalcase)
         return normalized
 
+    def setClass (self, word : str) -> Tuple[str,str]:
+        qryconceptos = "match \
+	        {{class: Concepto, as: c, where: (Nombre in ['{word}'])}} \
+                return c.Nombre as Nombre, c.@class.toUppercase() as clase".format(word=word)
+        resultq = self.db.execQuery(qryconceptos)
+        if len(resultq):
+            clase = resultq[0]['clase']
+            return (word,clase)
+        else:
+            qryrelaciones = "match \
+	            {{class: Relacion, as: r, where: (@class in ['{word}'])}} \
+                    return distinct r.@class.toUppercase() as Nombre, 'RELACION' as clase".format(word=word)
+            resultr = self.db.execQuery(qryrelaciones)
+            if len(resultr):
+                clase = resultr[0]['clase']
+                return (word,clase)
+            else:
+                return (word,None)
+
+    def setClasses (self, words : List[str]) -> List[Tuple[str,str]]:
+        # Es un diccionario para que la clave sea la palabra y el dato el tipo de item (concepto/relacion)
+        classes = dict()
+
+        listIn = self.db.__getInList__(words)
+        qryconceptos = "match \
+	        {{class: Concepto, as: c, where: (Nombre in [{words}])}} \
+                return c.Nombre as Nombre, c.@class.toUppercase() as clase".format(words=listIn)
+        resultq = self.db.execQuery(qryconceptos)
+        for item in resultq:
+            classes[item['Nombre']] = item['clase']
+
+        qryrelaciones = "match \
+            {{class: Relacion, as: r, where: (@class in [{words}])}} \
+                return distinct r.@class.toUppercase() as Nombre, 'RELACION' as clase".format(words=listIn)
+        resultr = self.db.execQuery(qryrelaciones)
+        for item in resultr:
+            classes[item['Nombre']] = item['clase']
+        
+        return classes
     
     #--------------------------------------------------------------------------------------------
     # CONSULTAS ESPECIFICAS Y METODOS ASOCIADOS
@@ -370,3 +447,37 @@ if ($relacion.size() = 0) {{
         query = "select from Concepto where out('{relname}').size() > 0 or in('{relname}').size() > 0".format(relname=relacion.Class)
         result = self.db.execCommand(query)
         return result
+
+    #--------------------------------------------------------------------------------------------
+    # GESTION DE RESPUESTAS (PUNTAJE EVALUACION ETC)
+    # --------------------------------------------------------------------------------------------
+    def tokenizeRespuesta (self, texto : str, textManager : TextManager = None, includeStopWords : bool = False):
+        tm = None
+        ret_tokens = []
+        if textManager:
+            tm = textManager
+        else:
+            tm = TextManager()
+        correcciones,tokens = tm.tokenize(texto)
+        if not len(correcciones):
+            if not includeStopWords:
+                words = [ tk['lema'].upper() for tk in tokens if not tk['stop']]
+            else:
+                words = [ tk['lema'].upper() for tk in tokens]
+            clases = self.setClasses(words=words)
+
+            tokens_out = []
+            for tk in tokens:
+                # Obtener el mapeo, o cadena vacía si no lo hay
+                clase = clases.get(tk['lema'].upper(),"")
+                claseSugerida = self.mapTipoTermino.get(tk['trans_pos'],"")
+                tk['claseDB'] = clase
+                tk['claseSugerida'] = claseSugerida
+                tokens_out.append(tk)
+
+            if not includeStopWords:
+                ret_tokens = [ tk for tk in tokens_out if not tk['stop']]
+            else:
+                ret_tokens = [ tk for tk in tokens]
+        
+        return correcciones,ret_tokens

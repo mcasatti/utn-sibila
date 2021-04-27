@@ -82,6 +82,10 @@ class DBManager:
         flds = flds.replace ("&",",").replace("%27","'").replace("+"," ")
         '''
         return flds
+    
+    def __getInList__ (self, values : List) -> str:
+        result = "'{}'".format("','".join(values))
+        return result
 
     def extractResult (self, response: requests.Response) -> str:
         parsed = json.loads(response.content.decode("utf-8"))

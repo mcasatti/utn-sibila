@@ -1,0 +1,2 @@
+cyhunspell
+rich
