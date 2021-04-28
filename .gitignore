@@ -84,3 +84,7 @@ software/doc/source-doc/html/
 orientdb/
 
 software/graph-view/
+
+docker/base-aws-key-pair.pem
+
+software/python/sibila-python/.vscode/settings.json

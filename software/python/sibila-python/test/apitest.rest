@@ -98,3 +98,11 @@ GET http://localhost:8000/path/depth
     },
     "depth" : 1
 }
+
+###
+
+GET http://localhost:8000/checkortografia
+
+{
+    "texto" : "Los ovjetos son parte del paradigma POO y están formados por métodos y hatributos"
+}

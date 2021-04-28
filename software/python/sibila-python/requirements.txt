@@ -4,3 +4,4 @@ fastapi-utils
 ftfy
 cyhunspell
 spacy
+rich
