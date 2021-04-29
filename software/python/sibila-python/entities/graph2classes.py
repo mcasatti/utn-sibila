@@ -1,20 +1,64 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class Term:
-    pass
+##-----------------------------------------------------------------------------------
+##  Vertex Clasess
+##-----------------------------------------------------------------------------------
+class CEvaluacion:
+    cicloLectivo: int
+    fecha: date
+    nombre: str
+    numero: str
+    tipo: str
 
-class Link:
-    pass
+class CFuzzy:
+    nombre: str
 
-class FuzzyLink:
-    pass
+class CPregunta:    
+    numero: str
+    puntuacion: int
+    texto: str
+    unidadTematicaNombre: str
+    unidadTematicaNumero: str
 
-class Exam:
-    pass
+class CRespuesta:
+    comision: str
+    numero: int
+    puntaje: float
+    texto: str
+    tipo: str
 
-class Unit:
-    pass
+class CTermino:
+    inPreguntas: list # EmnbeddedList
+    lema: str
+    nombre: str
 
-class Plan:
-    pass
+##-----------------------------------------------------------------------------------
+##  Edge Clasess
+##-----------------------------------------------------------------------------------
+class RFuzzy:
+    nombre: str
+
+class RSimple:
+    nombre: str
+
+class RTermino:
+    inRespuesta: list
+    lema: str
+    nombre: str
+
+##-----------------------------------------------------------------------------------
+##  Generic Clasess
+##-----------------------------------------------------------------------------------
+class OSecurityPolicy:
+    active: bool
+    afterUpdate: str
+    beforeUpdate: str
+    create: str
+    delete: str
+    execute: str
+    name: str
+    read: str
+
+    
+
