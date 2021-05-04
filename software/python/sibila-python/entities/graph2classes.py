@@ -43,7 +43,7 @@ class RSimple:
     nombre: str
 
 class RTermino:
-    inRespuesta: list
+    inRespuesta: list # EmnbeddedList
     lema: str
     nombre: str
 
