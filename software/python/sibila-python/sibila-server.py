@@ -12,6 +12,7 @@ from rich import print,inspect
 from rich.logging import RichHandler
 from managers.knowledgemanager import KnowledgeManager
 from managers.textmanager import TextManager
+from managers.graphicmanager import GraphicManager
 from fastapi import FastAPI, Request, Body
 from fastapi.encoders import jsonable_encoder
 from http import HTTPStatus
@@ -206,15 +207,16 @@ async def getPathByType (relacion : Relacion):
 '''
 METODOS para gestionar la ortografía y procesamiento de texto
 '''
-@app.get("/text/check")
+@app.post("/text/check")
 async def getTextCheck (texto : str = Body(...,embed=True), full : bool = Body(default=False,embed=True)):
     try:
-        result = tm.check(texto=texto,full=full)
+        res = tm.check(texto=texto,full=full)
+        result = {"correcciones" : res}
         return result
     except Exception as e:
         return Response(content=e.message, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-@app.get("/text/tokenize")
+@app.post("/text/tokenize")
 async def getTextTokens (texto : str = Body(...,embed=True)):
     try:
         correcciones,tokens = tm.tokenize(texto=texto)
