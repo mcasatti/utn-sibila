@@ -74,7 +74,6 @@ class TextManager:
         if not tokens:
             tokens = self.__tokenize__(texto)
         
-        error = False
         correcciones = []
 
         palabras = [token.text for token in tokens]
@@ -92,13 +91,11 @@ class TextManager:
                 "sugerencias": sugerencias
             })
 
-            if not correcta:
-                error = True
         # Si no pido el resultado full, devuelvo solo los errores
         if not full:
             correcciones = [c for c in correcciones if c['error']]
             
-        return correcciones, error
+        return correcciones
 
     def addWordToDict (self, word : str):
         self.dic.add(word)

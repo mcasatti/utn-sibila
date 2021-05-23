@@ -12,7 +12,7 @@ RUN \
 	python -m pip install --no-cache-dir --upgrade pip 
 
 RUN \
-	pip install --no-cache-dir fastapi uvicorn pydantic cyhunspell rich spacy 
+	pip install --no-cache-dir fastapi uvicorn pydantic cyhunspell rich spacy networkx matplotlib
 
 RUN \
 	# Si esto se hace en el RUN anterior, no encuentra spacy instalado. Acá si.
