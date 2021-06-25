@@ -451,7 +451,7 @@ if ($relacion.size() = 0) {{
     #--------------------------------------------------------------------------------------------
     # GESTION DE RESPUESTAS (PUNTAJE EVALUACION ETC)
     # --------------------------------------------------------------------------------------------
-    def tokenizeRespuesta (self, texto : str, textManager : TextManager = None, includeStopWords : bool = False):
+    def tokenizeRespuesta (self, texto : str, textManager : TextManager = None, includeStopWords : bool = True):
         tm = None
         ret_tokens = []
         if textManager:

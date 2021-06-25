@@ -124,7 +124,7 @@ class TextManager:
 
     def tokenize (self, texto : str) -> str:
         tkns = self.nlp(texto)
-        correcciones,error_ortografia = self.check(tokens=tkns)
+        correcciones = self.check(tokens=tkns)
 
         tokens = []
         for tkn in tkns:

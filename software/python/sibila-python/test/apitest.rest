@@ -101,8 +101,16 @@ GET http://localhost:8000/path/depth
 
 ###
 
-GET http://localhost:8000/checkortografia
+POST http://localhost:8000/text/check
 
 {
     "texto" : "Los ovjetos son parte del paradigma POO y están formados por métodos y hatributos"
+}
+###
+
+POST http://localhost:8000/text/tokenize
+
+{
+    "texto" : "Una sentencia es verdadera si todo su contenido interno es coherente y real",
+    "includeStopWords" : "false"
 }
