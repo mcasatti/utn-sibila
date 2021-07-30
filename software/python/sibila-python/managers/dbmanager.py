@@ -8,6 +8,7 @@ import json
 from entities.graphclasses import *
 import logging
 from rich.logging import RichHandler
+from rich import print,inspect
 # TODO: Corregir este import que falla
 #import ftfy
 
@@ -38,7 +39,7 @@ class DBManager:
 
     log = None
     
-    def __init__ (self, host='http://localhost', port=2480, database='PPR', user='admin', password='admin'):
+    def __init__ (self, host='http://localhost', port=2480, database='sibila-patterns', user='admin', password='admin'):
         self.host = host
         self.port = port
         self.database = database
@@ -60,8 +61,10 @@ class DBManager:
                 condition = condition + " and "
             # Ajustar el value para que si es un string se le agreguen comillas simples
             if isinstance(value,str):
-                value = "'{}'".format(value)
-            condition = condition + key + " = " + value
+                val = "'{}'".format(value)
+            else:
+                val = str(value)
+            condition = condition + key + " = " + val
         '''
         condition = parse.urlencode(keys)
         condition = condition.replace ("&"," AND ").replace("%27","'").replace("+"," ")
@@ -71,12 +74,20 @@ class DBManager:
     def __getFieldsFromDict__ (self, fields : Dict) -> str:
         flds = ""
         for field,value in fields.items():
-            if flds:
-                flds = flds + ", "
-            # Ajustar el value para que si es un string se le agreguen comillas simples
-            if isinstance(value,str):
-                value = "'{}'".format(value)
-            flds = flds + field + " = " + value
+            try:
+                if flds:
+                    flds = flds + ", "
+                # Ajustar el value para que si es un string se le agreguen comillas simples
+                if isinstance(value,str):
+                    val = "'{}'".format(value)
+                else:
+                    val = str(value)
+                flds = flds + field + " = " + val
+            except:
+                print("Except:", field, value)
+                #print("LLEGUE AL EXCEPT DEL DBMANAGER")
+                #print(field,'=' ,value)
+            
         '''
         flds = parse.urlencode(fields)
         flds = flds.replace ("&",",").replace("%27","'").replace("+"," ")
@@ -135,7 +146,9 @@ class DBManager:
             return self.extractResult(response)
 
     def insVertex (self, classname : str, fields : Dict) ->Tuple[str,int]:
+        #inspect(fields)
         flds = self.__getFieldsFromDict__(fields)
+        #inspect(flds)
         command = "CREATE VERTEX {classname} SET {fields}".format(classname=classname,fields=flds)
         result = self.execCommand(command)
         if result:
@@ -176,6 +189,7 @@ class DBManager:
         command = "CREATE EDGE {edgeClass} FROM (SELECT FROM {sourceClass} WHERE {sourceCondition}) TO (SELECT FROM {destClass} WHERE {destCondition})".format(
             edgeClass=edgeClass,sourceClass=sourceClass,sourceCondition=outCondition,destClass=destClass,destCondition=inCondition
         )
+        self.log.error(command)
         return self.execCommand(command)
 
     def delEdge (self, sourceClass : str, sourceCondition : Dict, destClass : str, destCondition : Dict, edgeClass : str) -> str:
